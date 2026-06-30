@@ -11,14 +11,13 @@
 :root {
   --bg:         #060a14;
   --surface:    rgba(255,255,255,0.04);
-  --surface-hv: rgba(255,255,255,0.08);
   --glass:      rgba(255,255,255,0.06);
   --border:     rgba(255,255,255,0.10);
-  --border-hv:  rgba(99,179,237,0.45);
   --primary:    #4361EE;
   --primary-lt: #6C8AFF;
   --accent:     #00D4FF;
   --accent2:    #7B2FFF;
+  --gold:       #FFD166;
   --success:    #00E5A0;
   --warn:       #FFB800;
   --danger:     #FF4D6A;
@@ -45,13 +44,18 @@ body {
 #matrix-canvas {
   position: fixed; top: 0; left: 0;
   width: 100%; height: 100%;
-  z-index: 0; opacity: 0.18; pointer-events: none;
+  z-index: 0; opacity: 0.16; pointer-events: none;
 }
 .bg-overlay {
   position: fixed; inset: 0;
   background: radial-gradient(ellipse 80% 60% at 50% 30%,
     rgba(6,10,20,0.45) 0%, rgba(6,10,20,0.82) 60%, rgba(6,10,20,0.96) 100%);
   z-index: 1; pointer-events: none;
+}
+.scan-lines {
+  position: fixed; inset: 0; z-index: 2;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+  pointer-events: none;
 }
 
 .topbar {
@@ -76,14 +80,7 @@ body {
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .topbar-info p { font-size: 0.75rem; color: var(--text-3); margin-top: 2px; font-family: var(--mono); }
-.topbar-badge {
-  margin-left: auto; padding: 5px 12px; border-radius: 20px;
-  background: rgba(0,212,255,0.12); border: 1px solid rgba(0,212,255,0.3);
-  color: var(--accent); font-size: 0.72rem; font-family: var(--mono);
-  font-weight: 600; letter-spacing: 0.5px;
-}
 
-/* Refresh button */
 .btn-refresh {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(0,212,255,0.3);
@@ -93,9 +90,8 @@ body {
 }
 .btn-refresh:hover { background: rgba(0,212,255,0.16); border-color: rgba(0,212,255,0.5); }
 .btn-refresh.spinning svg { animation: spin 0.7s linear infinite; }
-.btn-refresh svg { width: 13px; height: 13px; transition: none; }
+.btn-refresh svg { width: 13px; height: 13px; }
 
-/* Auto-refresh indicator */
 .auto-refresh-row {
   display: flex; align-items: center; gap: 10px;
   font-size: 0.72rem; font-family: var(--mono); color: var(--text-3);
@@ -108,23 +104,17 @@ body {
 }
 @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
+.topbar-badge {
+  padding: 5px 12px; border-radius: 20px;
+  background: rgba(0,212,255,0.12); border: 1px solid rgba(0,212,255,0.3);
+  color: var(--accent); font-size: 0.72rem; font-family: var(--mono);
+  font-weight: 600; letter-spacing: 0.5px;
+}
+
 .page {
   position: relative; z-index: 5;
   max-width: 1200px; margin: 0 auto; padding: 28px 24px 80px;
 }
-
-.selector-row {
-  display: flex; flex-wrap: wrap; gap: 16px;
-  margin-bottom: 28px; padding: 22px 24px;
-  background: var(--glass); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); backdrop-filter: blur(16px);
-  position: relative; overflow: hidden;
-}
-.selector-row::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-}
-.selector-field { flex: 1 1 200px; }
 
 label {
   display: block; font-size: 0.7rem; font-weight: 600;
@@ -132,7 +122,7 @@ label {
   margin-bottom: 8px; font-family: var(--mono);
 }
 
-select, input[type="text"] {
+select, input[type="text"], input[type="date"] {
   width: 100%; padding: 10px 14px;
   background: rgba(255,255,255,0.05); border: 1px solid var(--border);
   border-radius: 9px; font-size: 0.9rem; color: var(--text-1);
@@ -144,19 +134,17 @@ select {
   background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
 }
 select option { background: #0d1424; color: var(--text-1); }
-select:focus, input[type="text"]:focus {
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7) sepia(1) saturate(5) hue-rotate(150deg); cursor: pointer; }
+select:focus, input[type="text"]:focus, input[type="date"]:focus {
   outline: none; border-color: var(--accent);
   background: rgba(0,212,255,0.06); box-shadow: 0 0 0 3px rgba(0,212,255,0.12);
 }
-select:hover, input[type="text"]:hover {
+select:hover, input[type="text"]:hover, input[type="date"]:hover {
   border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.07);
 }
+select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Loading skeleton for dropdown */
-select:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+.date-hint { margin-top: 6px; font-size: 0.68rem; color: var(--text-3); font-family: var(--mono); }
 
 .card {
   background: var(--glass); border: 1px solid var(--border);
@@ -168,8 +156,7 @@ select:disabled { opacity: 0.5; cursor: not-allowed; }
 .card::before {
   content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 1px;
 }
-.card.card-form::before  { background: linear-gradient(90deg, transparent, var(--primary-lt), transparent); }
-.card.card-chart::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.card-form::before { background: linear-gradient(90deg, transparent, var(--primary-lt), transparent); }
 
 .card-title {
   font-size: 0.85rem; font-weight: 700; letter-spacing: 0.6px;
@@ -177,36 +164,25 @@ select:disabled { opacity: 0.5; cursor: not-allowed; }
   display: flex; align-items: center; gap: 8px; font-family: var(--mono);
 }
 .card-title .dot { width: 8px; height: 8px; border-radius: 50%; }
-.card-form  .dot { background: var(--primary-lt); box-shadow: 0 0 8px var(--primary-lt); }
-.card-chart .dot { background: var(--accent);     box-shadow: 0 0 8px var(--accent); }
+.card-form .dot { background: var(--primary-lt); box-shadow: 0 0 8px var(--primary-lt); }
 
-/* Last-updated label */
 .last-updated {
   margin-left: auto; font-size: 0.65rem; color: var(--text-3);
   font-family: var(--mono); font-weight: 400; text-transform: none; letter-spacing: 0;
 }
 
-.form-row { margin-bottom: 18px; }
-.ro-val {
-  padding: 10px 14px; background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06); border-radius: 9px;
-  font-size: 0.9rem; color: var(--text-1); min-height: 40px;
-  font-family: var(--mono); letter-spacing: 0.2px;
+/* ── Entry form ── */
+.entry-form-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 18px; align-items: end;
 }
-
-.status-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 12px; border-radius: 20px;
-  font-size: 0.75rem; font-weight: 700; font-family: var(--mono); letter-spacing: 0.4px;
-}
-.badge-pending { background: rgba(255,184,0,0.15);  color: var(--warn);    border: 1px solid rgba(255,184,0,0.3); }
-.badge-done    { background: rgba(0,229,160,0.12); color: var(--success); border: 1px solid rgba(0,229,160,0.3); }
+@media (max-width: 920px) { .entry-form-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .entry-form-grid { grid-template-columns: 1fr; } }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   padding: 12px 28px; border-radius: 10px; border: none;
   font-size: 0.9rem; font-weight: 700; font-family: var(--sans);
-  cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px;
+  cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; white-space: nowrap;
 }
 .btn-primary {
   background: linear-gradient(135deg, var(--primary), var(--accent2));
@@ -231,27 +207,64 @@ select:disabled { opacity: 0.5; cursor: not-allowed; }
 .toast.error   { background: rgba(255,77,106,0.1); color: var(--danger);  border: 1px solid rgba(255,77,106,0.25); }
 .toast.show    { display: block; }
 
-.chart-filters { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
-.chart-filters .selector-field { flex: 1 1 150px; }
-
-.stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.stat-chip {
-  flex: 1 1 80px; background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border); border-radius: 10px;
-  padding: 12px 14px; text-align: center; transition: border-color 0.2s;
+/* Today's activity strip */
+.today-strip { margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--border); }
+.today-strip-title { font-size: 0.68rem; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 10px; }
+.today-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.today-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 20px; font-size: 0.75rem; font-family: var(--mono);
 }
-.stat-chip:hover { border-color: rgba(255,255,255,0.18); }
-.stat-chip .num { font-size: 1.6rem; font-weight: 800; font-family: var(--mono); }
-.stat-chip .lbl { font-size: 0.65rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
-.num-total { color: var(--text-1); }
-.num-done  { color: var(--success); text-shadow: 0 0 12px rgba(0,229,160,0.5); }
-.num-pct   { color: var(--accent);  text-shadow: 0 0 12px rgba(0,212,255,0.4); }
+.chip-done    { background: rgba(0,229,160,0.12); color: var(--success); border: 1px solid rgba(0,229,160,0.3); }
+.chip-pending { background: rgba(255,184,0,0.12);  color: var(--warn);   border: 1px solid rgba(255,184,0,0.3); }
+.today-empty  { color: var(--text-3); font-size: 0.82rem; font-family: var(--mono); }
 
-.chart-section-title {
-  font-size: 0.68rem; font-family: var(--mono);
-  text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3); margin-bottom: 10px;
+/* ── Stats dashboard ── */
+.stats-header { display: flex; align-items: baseline; gap: 10px; margin: 44px 0 20px; }
+.stats-header h2 {
+  font-size: 1.1rem; font-weight: 800; letter-spacing: -0.2px;
+  background: linear-gradient(90deg, #fff 0%, var(--gold) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.chart-wrap { position: relative; width: 100%; margin-bottom: 22px; }
+.stats-header span { font-size: 0.72rem; color: var(--text-3); font-family: var(--mono); }
+
+.stats-grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 24px; }
+@media (max-width: 920px) { .stats-grid { grid-template-columns: 1fr; } }
+
+.card-stat::before { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.card-stat .dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.card-leader::before { background: linear-gradient(90deg, transparent, var(--accent2), transparent); }
+.card-leader .dot { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); }
+.card-donut::before { background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.card-donut .dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+/* Completion rate */
+.completion-big { font-size: 2.6rem; font-weight: 800; font-family: var(--mono); color: var(--gold); text-shadow: 0 0 22px rgba(255,209,102,0.45); line-height: 1; }
+.completion-sub { font-size: 0.8rem; color: var(--text-2); margin-top: 6px; }
+.progress-track { margin-top: 18px; height: 14px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--primary), var(--gold)); width: 0%; transition: width 0.7s cubic-bezier(.22,1,.36,1); box-shadow: 0 0 14px rgba(255,209,102,0.4); }
+.progress-caption { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.7rem; color: var(--text-3); font-family: var(--mono); }
+
+/* Leaderboard */
+.leader-list { display: flex; flex-direction: column; gap: 10px; }
+.leader-row { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid transparent; transition: border-color 0.2s; }
+.leader-row:hover { border-color: rgba(255,255,255,0.12); }
+.leader-rank { width: 22px; text-align: center; font-family: var(--mono); font-weight: 800; font-size: 0.85rem; color: var(--text-3); flex-shrink: 0; }
+.leader-row.rank-1 .leader-rank { color: #FFD166; }
+.leader-row.rank-2 .leader-rank { color: #C9D4E8; }
+.leader-row.rank-3 .leader-rank { color: #E0A05A; }
+.leader-name { flex: 1; font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leader-streak { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--warn); flex-shrink: 0; }
+.leader-empty { color: var(--text-3); font-size: 0.85rem; font-family: var(--mono); }
+
+/* Donut */
+.donut-wrap { position: relative; height: 190px; }
+.donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.donut-center .pct { font-size: 1.5rem; font-weight: 800; font-family: var(--mono); color: var(--accent); }
+.donut-center .lbl { font-size: 0.62rem; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
+.donut-legend { display: flex; justify-content: center; gap: 18px; margin-top: 14px; font-size: 0.74rem; font-family: var(--mono); color: var(--text-2); }
+.donut-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-swatch { width: 9px; height: 9px; border-radius: 3px; }
 
 #loading-overlay {
   position: fixed; inset: 0; z-index: 999;
@@ -267,17 +280,10 @@ select:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 #loading-overlay p { color: var(--text-2); font-size: 0.85rem; font-family: var(--mono); }
 
-.scan-lines {
-  position: fixed; inset: 0; z-index: 2;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
-  pointer-events: none;
-}
-
 @media (max-width: 480px) {
   .topbar { padding: 14px 16px; }
   .page   { padding: 20px 12px 60px; }
   .card   { padding: 20px 16px; }
-  .selector-row { padding: 18px 16px; }
 }
 </style>
 </head>
@@ -289,14 +295,14 @@ select:disabled { opacity: 0.5; cursor: not-allowed; }
 
 <div id="loading-overlay" role="status">
   <div class="ov-ring"></div>
-  <p id="loading-msg">Discovering sheets…</p>
+  <p id="loading-msg">Connecting to Google Sheets…</p>
 </div>
 
 <header class="topbar">
-  <div class="topbar-logo" aria-hidden="true">📋</div>
+  <div class="topbar-logo" aria-hidden="true">🧘</div>
   <div class="topbar-info">
     <h1>Meditation Progress Tracker</h1>
-    <p>real-time · google sheets · live sync</p>
+    <p>daily logs · google sheets · live sync</p>
   </div>
   <div class="auto-refresh-row">
     <div class="auto-refresh-dot"></div>
@@ -314,90 +320,104 @@ select:disabled { opacity: 0.5; cursor: not-allowed; }
 
 <main class="page">
 
-  <div class="selector-row" role="region" aria-label="Topic and participant selection">
-    <div class="selector-field">
-      <label for="topicSelect">Topic Sheet</label>
-      <select id="topicSelect" onchange="onTopicChange()" disabled>
-        <option value="">Loading sheets…</option>
-      </select>
+  <!-- ═══ DATA ENTRY FORM ═══ -->
+  <div class="card card-form" role="region" aria-label="Log today's progress">
+    <div class="card-title">
+      <span class="dot"></span>Log Your Progress
+      <span class="last-updated" id="form-updated"></span>
     </div>
-    <div class="selector-field">
-      <label for="nameSelect">Participant Name</label>
-      <select id="nameSelect" onchange="onNameChange()" disabled>
-        <option value="">— select topic first —</option>
-      </select>
+
+    <form id="entryForm" class="entry-form-grid" onsubmit="return handleSubmit(event)">
+      <div>
+        <label for="nameSelect">Participant Name</label>
+        <select id="nameSelect" required disabled>
+          <option value="">Loading…</option>
+        </select>
+      </div>
+      <div>
+        <label for="topicSelect">Topic</label>
+        <select id="topicSelect" required disabled>
+          <option value="">Loading…</option>
+        </select>
+      </div>
+      <div>
+        <label for="dateInput">Date</label>
+        <input type="date" id="dateInput" required/>
+        <div class="date-hint" id="date-display"></div>
+      </div>
+      <div>
+        <label for="statusSelect">Status</label>
+        <select id="statusSelect" required>
+          <option value="Not Started" selected>Not Started</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+      <div>
+        <button type="submit" class="btn btn-primary" id="saveBtn">
+          <span class="spinner" id="save-spinner"></span>Save Entry
+        </button>
+      </div>
+    </form>
+
+    <div id="save-toast" class="toast"></div>
+
+    <div class="today-strip">
+      <div class="today-strip-title">Your activity today</div>
+      <div id="today-chip-row" class="today-chip-row">
+        <span class="today-empty">Select your name to see today's log.</span>
+      </div>
     </div>
   </div>
 
-  <div class="grid">
+  <!-- ═══ STATS & ACHIEVEMENTS DASHBOARD ═══ -->
+  <div class="stats-header">
+    <h2>🏆 Stats &amp; Achievements</h2>
+    <span id="dash-updated"></span>
+  </div>
 
-    <!-- LEFT: Participant Record -->
-    <div class="card card-form" role="region" aria-label="Your record">
-      <div class="card-title">
-        <span class="dot"></span>Your Record
-        <span class="last-updated" id="form-updated"></span>
-      </div>
-      <div id="form-area">
-        <p style="color:var(--text-3);font-size:0.85rem;font-family:var(--mono)">
-          Select your name above to load your record.
-        </p>
+  <div class="stats-grid">
+
+    <!-- Daily completion rate -->
+    <div class="card card-stat" role="region" aria-label="Daily completion rate">
+      <div class="card-title"><span class="dot"></span>Today's Engagement</div>
+      <div class="completion-big" id="completion-pct">–%</div>
+      <div class="completion-sub" id="completion-sub">of the team updated today</div>
+      <div class="progress-track"><div class="progress-fill" id="completion-bar"></div></div>
+      <div class="progress-caption">
+        <span id="completion-count">0 / 0 updated</span>
+        <span id="completion-date"></span>
       </div>
     </div>
 
-    <!-- RIGHT: Charts -->
-    <div class="card card-chart" role="region" aria-label="Team progress">
-      <div class="card-title">
-        <span class="dot"></span>Team Progress
-        <span class="last-updated" id="chart-updated"></span>
+    <!-- Streak leaderboard -->
+    <div class="card card-leader" role="region" aria-label="Streak leaderboard">
+      <div class="card-title"><span class="dot"></span>Streak Leaderboard</div>
+      <div class="leader-list" id="leader-list">
+        <div class="leader-empty">No streaks yet — be the first!</div>
       </div>
-
-      <div class="chart-filters">
-        <div class="selector-field">
-          <label for="nameFilter">View by Participant</label>
-          <select id="nameFilter" onchange="drawCharts()">
-            <option value="ALL">All Participants</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="stats-row">
-        <div class="stat-chip">
-          <div class="num num-total" id="stat-total">–</div>
-          <div class="lbl">Total</div>
-        </div>
-        <div class="stat-chip">
-          <div class="num num-done" id="stat-done">–</div>
-          <div class="lbl">Done</div>
-        </div>
-        <div class="stat-chip">
-          <div class="num num-pct" id="stat-pct">–</div>
-          <div class="lbl">% Done</div>
-        </div>
-      </div>
-
-      <p class="chart-section-title">Completions by Day</p>
-      <div class="chart-wrap" style="height:200px">
-        <canvas id="barChart"></canvas>
-      </div>
-
-      <div id="lineSection" style="display:none">
-        <p class="chart-section-title" style="margin-top:6px">Your Cumulative Progress</p>
-        <div class="chart-wrap" style="height:160px">
-          <canvas id="lineChart"></canvas>
-        </div>
-      </div>
-
     </div>
+
+    <!-- Topic progress donut -->
+    <div class="card card-donut" role="region" aria-label="Topic progress">
+      <div class="card-title"><span class="dot"></span>Topic Progress</div>
+      <div class="donut-wrap">
+        <canvas id="donutChart"></canvas>
+        <div class="donut-center"><div class="pct" id="donut-pct">–%</div><div class="lbl">Complete</div></div>
+      </div>
+      <div class="donut-legend">
+        <span><i class="legend-swatch" style="background:#00E5A0"></i>Completed</span>
+        <span><i class="legend-swatch" style="background:rgba(255,255,255,0.15)"></i>Not Started</span>
+      </div>
+    </div>
+
   </div>
 </main>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════════
-   CONFIG – paste your Web App URL here
+   CONFIG
    ═══════════════════════════════════════════════════════════════════ */
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeUrtpoFPk1vCOUhqoEiMGFnOyQ-LKo9tavPwa4XCtgCZwNIOGh2OpcWuIwCT38UhJog/exec";
-
-/* Auto-refresh every 30 seconds */
 const AUTO_REFRESH_MS = 30000;
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -445,22 +465,19 @@ Chart.defaults.font.size   = 11;
 /* ═══════════════════════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════════════════════ */
-let allRows      = [];
-let barChart     = null;
-let lineChart    = null;
-let currentTopic = "";
+let allLogs        = [];   // raw rows from Daily_Logs
+let participants    = [];
+let topics           = [];
+let donutChart       = null;
 let autoRefreshTimer = null;
 
 /* ═══════════════════════════════════════════════════════════════════
-   JSONP helper with cache-busting (_t= timestamp)
+   JSONP helper
    ═══════════════════════════════════════════════════════════════════ */
 let _jsonpSeq = 0;
-function jsonp(url, params, onSuccess, onError) {
+function jsonp(params, onSuccess, onError) {
   const cbName = "__gasCallback" + (++_jsonpSeq);
   const tag    = document.createElement("script");
-
-  /* ← cache-bust: unique timestamp prevents browser from serving
-       a cached response for getAll / getSheets calls */
   const allParams = Object.assign({}, params, { callback: cbName, _t: Date.now() });
   const qs = Object.entries(allParams)
     .map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v))
@@ -468,7 +485,7 @@ function jsonp(url, params, onSuccess, onError) {
 
   const timer = setTimeout(() => {
     cleanup();
-    if (onError) onError("Request timed out. Check your Apps Script URL.");
+    if (onError) onError("Request timed out. Check your Apps Script URL / deployment.");
   }, 15000);
 
   function cleanup() {
@@ -478,410 +495,327 @@ function jsonp(url, params, onSuccess, onError) {
   }
 
   window[cbName] = function(data) { cleanup(); onSuccess(data); };
-  tag.src    = url + "?" + qs;
+  tag.src = APPS_SCRIPT_URL + "?" + qs;
   tag.onerror = () => { cleanup(); if (onError) onError("Script load failed. Check your Apps Script URL."); };
   document.head.appendChild(tag);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   INIT – discover sheets first, then load data
+   INIT
    ═══════════════════════════════════════════════════════════════════ */
 window.addEventListener("DOMContentLoaded", () => {
-  const p = new URLSearchParams(window.location.search);
+  setTodayDate();
 
-  /* ── Startup diagnostic: show helpful error if getSheets times out ── */
   const startupTimeout = setTimeout(() => {
     showOverlay(false);
-    document.getElementById("form-area").innerHTML = `
-      <div class="toast error show" style="display:block;line-height:1.7">
-        <strong>⚠ Could not reach Apps Script</strong><br>
-        URL called:<br>
-        <code style="font-size:0.75rem;word-break:break-all;color:#aac">${APPS_SCRIPT_URL}</code><br><br>
-        <strong>Check:</strong><br>
-        1. Open that URL in a new tab — do you see a Google login page?<br>
-        &nbsp;&nbsp;&nbsp;→ Set deployment access to <em>Anyone</em> (not "Only myself")<br>
-        2. Did you deploy a <em>New Version</em> (not just Save)?<br>
-        &nbsp;&nbsp;&nbsp;→ Deploy → Manage Deployments → Edit → New Version → Deploy<br>
-        3. Is the URL above the correct one from your latest deployment?
-      </div>`;
-    document.getElementById("nameSelect").innerHTML = `<option value="">⚠ Connection failed</option>`;
-    document.getElementById("topicSelect").innerHTML = `<option value="">⚠ Connection failed</option>`;
-  }, 10000);
+    showGlobalError(
+      "Could not reach Apps Script.\nURL called: " + APPS_SCRIPT_URL +
+      "\n\nCheck: the URL is correct, the deployment is set to 'Anyone' access, " +
+      "and you redeployed a new version after any script edits."
+    );
+  }, 15000);
 
-  fetchSheetNames(function(sheets) {
-    clearTimeout(startupTimeout);           // ← cancel the error if we succeed
-    const wanted = p.get("topic");
-    currentTopic = (wanted && sheets.includes(wanted)) ? wanted : sheets[0];
-    document.getElementById("topicSelect").value = currentTopic;
-
-    fetchAllRows(currentTopic, function() {
-      if (p.get("name")) {
-        document.getElementById("nameSelect").value = p.get("name");
-        onNameChange();
-      }
-      startAutoRefresh();
-    });
-  });
+  loadAll(() => clearTimeout(startupTimeout));
+  autoRefreshTimer = setInterval(() => loadAll(null, true), AUTO_REFRESH_MS);
 });
 
-/* ═══════════════════════════════════════════════════════════════════
-   FETCH sheet names – builds topic dropdown dynamically
-   ═══════════════════════════════════════════════════════════════════ */
-function fetchSheetNames(callback) {
-  setLoadingMsg("Discovering sheets…");
-  jsonp(
-    APPS_SCRIPT_URL,
-    { action: "getSheets" },
+function setTodayDate() {
+  const input = document.getElementById("dateInput");
+  const today = new Date();
+  input.value = today.toISOString().slice(0, 10); // yyyy-mm-dd for the native picker
+  input.max   = today.toISOString().slice(0, 10); // can't log future days
+  updateDateDisplay();
+  input.addEventListener("change", updateDateDisplay);
+}
+function updateDateDisplay() {
+  const val = document.getElementById("dateInput").value;
+  document.getElementById("date-display").textContent = val ? "Will be logged as " + toDDMMYYYY(val) : "";
+}
+function toDDMMYYYY(isoStr) {
+  const [y, m, d] = isoStr.split("-");
+  return `${d}/${m}/${y}`;
+}
+
+function loadAll(onDone, silent) {
+  if (!silent) showOverlay(true);
+  jsonp({ action: "init" },
     function(data) {
-      if (data.status === "ok" && data.sheets && data.sheets.length) {
-        buildTopicDropdown(data.sheets);
-        if (callback) callback(data.sheets);
-      } else {
-        showOverlay(false);
-        showGlobalError("Could not load sheet list: " + (data.message || "Unknown error"));
+      showOverlay(false);
+      if (data.status !== "ok") {
+        showGlobalError(data.message || "Failed to load data.");
+        if (onDone) onDone();
+        return;
       }
+      allLogs      = data.logs || [];
+      participants = data.participants || [];
+      topics       = data.topics || [];
+
+      populateDropdowns();
+      renderTodayStrip();
+      renderDashboard();
+      setSyncLabel();
+      if (onDone) onDone();
     },
     function(errMsg) {
       showOverlay(false);
       showGlobalError(errMsg);
+      if (onDone) onDone();
     }
   );
 }
 
-/* Builds the topic <select> from the live sheet list */
-function buildTopicDropdown(sheets) {
-  const sel = document.getElementById("topicSelect");
-  const prev = sel.value;
-  sel.innerHTML = "";
-  sheets.forEach(name => {
-    const o = document.createElement("option");
-    o.value = o.textContent = name;
-    if (name === prev) o.selected = true;
-    sel.appendChild(o);
-  });
-  sel.disabled = false;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   EVENTS
-   ═══════════════════════════════════════════════════════════════════ */
-function onTopicChange() {
-  currentTopic = document.getElementById("topicSelect").value;
-  clearForm();
-  stopAutoRefresh();
-  fetchAllRows(currentTopic, startAutoRefresh);
-}
-
-function onNameChange() {
-  const name = document.getElementById("nameSelect").value;
-  if (!name) { clearForm(); return; }
-  loadParticipant(name);
-  const cf = document.getElementById("nameFilter");
-  if ([...cf.options].some(o => o.value === name)) cf.value = name;
-  drawCharts();
-}
-
-/* Manual refresh button */
 function manualRefresh() {
   const btn = document.getElementById("refreshBtn");
   btn.classList.add("spinning");
-  btn.disabled = true;
-  stopAutoRefresh();
-  silentRefresh(function() {
-    btn.classList.remove("spinning");
-    btn.disabled = false;
-    startAutoRefresh();
+  loadAll(() => btn.classList.remove("spinning"), true);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DROPDOWNS
+   ═══════════════════════════════════════════════════════════════════ */
+function populateDropdowns() {
+  const ns = document.getElementById("nameSelect");
+  const prevName = ns.value;
+  ns.innerHTML = '<option value="">— select your name —</option>';
+  participants.forEach(n => {
+    const o = document.createElement("option");
+    o.value = o.textContent = n;
+    if (n === prevName) o.selected = true;
+    ns.appendChild(o);
   });
+  ns.disabled = participants.length === 0;
+  ns.onchange = renderTodayStrip;
+
+  const ts = document.getElementById("topicSelect");
+  const prevTopic = ts.value;
+  ts.innerHTML = '<option value="">— select a topic —</option>';
+  topics.forEach(t => {
+    const o = document.createElement("option");
+    o.value = o.textContent = t;
+    if (t === prevTopic) o.selected = true;
+    ts.appendChild(o);
+  });
+  ts.disabled = topics.length === 0;
+
+  if (participants.length === 0) ns.innerHTML = '<option value="">⚠ Add names to Participants_List</option>';
+  if (topics.length === 0) ts.innerHTML = '<option value="">⚠ Add topics to Topics_List</option>';
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   AUTO-REFRESH – silent background poll every 30 s
+   SUBMIT
    ═══════════════════════════════════════════════════════════════════ */
-function startAutoRefresh() {
-  stopAutoRefresh();
-  autoRefreshTimer = setInterval(silentRefresh, AUTO_REFRESH_MS);
-}
+function handleSubmit(evt) {
+  evt.preventDefault();
+  const name   = document.getElementById("nameSelect").value;
+  const topic  = document.getElementById("topicSelect").value;
+  const dateIso = document.getElementById("dateInput").value;
+  const status = document.getElementById("statusSelect").value;
 
-function stopAutoRefresh() {
-  if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
-}
-
-/* Refresh data without showing the full-screen overlay */
-function silentRefresh(callback) {
-  if (!currentTopic) { if (callback) callback(); return; }
-  jsonp(
-    APPS_SCRIPT_URL,
-    { action: "getAll", sheet: currentTopic },
-    function(data) {
-      if (data.status === "ok") {
-        const prevName = document.getElementById("nameSelect").value;
-        allRows = data.rows;
-        populateNameDropdowns(prevName);
-        drawCharts();
-        if (prevName) loadParticipant(prevName);
-        setSyncLabel();
-      }
-      if (callback) callback();
-    },
-    function() { if (callback) callback(); }   // silent on error during auto-refresh
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   FETCH all rows (with loading overlay – used on topic change)
-   ═══════════════════════════════════════════════════════════════════ */
-function fetchAllRows(topic, callback) {
-  setLoadingMsg("Loading " + topic + " data…");
-  showOverlay(true);
-  jsonp(
-    APPS_SCRIPT_URL,
-    { action: "getAll", sheet: topic },
-    function(data) {
-      showOverlay(false);
-      if (data.status === "ok") {
-        allRows = data.rows;
-        populateNameDropdowns();
-        drawCharts();
-        setSyncLabel();
-        if (callback) callback();
-      } else {
-        showGlobalError(data.message || "Failed to load data.");
-      }
-    },
-    function(errMsg) {
-      showOverlay(false);
-      showGlobalError(errMsg);
-    }
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   LOAD one participant's record
-   ═══════════════════════════════════════════════════════════════════ */
-function loadParticipant(name) {
-  const row = allRows.find(r => r.name === name);
-  renderForm(row, name);
-  setFormUpdated();
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   RENDER participant form
-   ═══════════════════════════════════════════════════════════════════ */
-function renderForm(row, attemptedName) {
-  const area = document.getElementById("form-area");
-
-  if (!row) {
-    area.innerHTML = `
-      <div class="toast error show" style="display:block">
-        Participant <strong>${escHtml(attemptedName)}</strong> not found in this sheet.
-      </div>`;
-    return;
+  if (!name || !topic || !dateIso || !status) {
+    showToast("save-toast", "✗ Please fill in every field.", "error");
+    return false;
   }
 
-  const isCompleted = row.updation === "Completed";
-  const badgeClass  = isCompleted ? "badge-done" : "badge-pending";
-  const badgeDot    = isCompleted ? "✓" : "○";
-  const badgeLabel  = isCompleted ? "Completed" : "Not Started";
-
-  area.innerHTML = `
-    <div class="form-row">
-      <label>Participant Name</label>
-      <div class="ro-val">${escHtml(row.name)}</div>
-    </div>
-    <div class="form-row">
-      <label>Date</label>
-      <div class="ro-val">${escHtml(row.date)}</div>
-    </div>
-    <div class="form-row">
-      <label>Topic</label>
-      <div class="ro-val">${escHtml(row.topic)}</div>
-    </div>
-    <div class="form-row">
-      <label>Current Status</label>
-      <div style="margin-bottom:12px">
-        <span class="status-badge ${badgeClass}">${badgeDot} ${badgeLabel}</span>
-      </div>
-      <label for="updationSelect">Update Status</label>
-      <select id="updationSelect">
-        <option value="Not Started" ${!isCompleted ? "selected" : ""}>Not Started</option>
-        <option value="Completed"   ${ isCompleted ? "selected" : ""}>Completed</option>
-      </select>
-    </div>
-    <button class="btn btn-primary" id="saveBtn" onclick="saveRecord('${escHtml(row.name)}')">
-      <div class="spinner" id="save-spinner"></div>
-      Save Changes
-    </button>
-    <div class="toast" id="save-toast"></div>
-  `;
-}
-
-/* ═══════════════════════════════════════════════════════════════════
-   SAVE record back to Google Sheets
-   ═══════════════════════════════════════════════════════════════════ */
-function saveRecord(name) {
-  const updation = document.getElementById("updationSelect").value;
-  const btn      = document.getElementById("saveBtn");
-  const spinner  = document.getElementById("save-spinner");
-
-  btn.disabled          = true;
-  spinner.style.display = "block";
+  const saveBtn = document.getElementById("saveBtn");
+  saveBtn.disabled = true;
+  document.getElementById("save-spinner").style.display = "inline-block";
 
   jsonp(
-    APPS_SCRIPT_URL,
-    { action: "update", sheet: currentTopic, name: name, updation: updation },
+    { action: "save", name, topic, date: toDDMMYYYY(dateIso), status },
     function(data) {
+      saveBtn.disabled = false;
+      document.getElementById("save-spinner").style.display = "none";
       if (data.status === "ok") {
-        /* Update local cache immediately – no wait for next poll */
-        const idx = allRows.findIndex(r => r.name === name);
-        if (idx !== -1) allRows[idx].updation = updation;
-        drawCharts();
-        loadParticipant(name);
         showToast("save-toast", "✓ Saved successfully!", "success");
-        setSyncLabel();
+        setFormUpdated();
+        loadAll(null, true); // pull the fresh row + recompute stats/leaderboard
       } else {
         showToast("save-toast", "✗ " + (data.message || "Save failed."), "error");
       }
-      if (document.getElementById("saveBtn")) {
-        document.getElementById("saveBtn").disabled = false;
-        document.getElementById("save-spinner").style.display = "none";
-      }
     },
     function(errMsg) {
+      saveBtn.disabled = false;
+      document.getElementById("save-spinner").style.display = "none";
       showToast("save-toast", "✗ " + errMsg, "error");
-      if (document.getElementById("saveBtn")) {
-        document.getElementById("saveBtn").disabled = false;
-        document.getElementById("save-spinner").style.display = "none";
-      }
     }
   );
+  return false;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   POPULATE name dropdowns
+   TODAY STRIP (per-participant)
    ═══════════════════════════════════════════════════════════════════ */
-function populateNameDropdowns(restoreName) {
-  const names = [...new Set(allRows.map(r => r.name))].sort();
-
-  const ns   = document.getElementById("nameSelect");
-  const prev = restoreName || ns.value;
-  ns.innerHTML = '<option value="">— select your name —</option>';
-  names.forEach(n => {
-    const o = document.createElement("option");
-    o.value = o.textContent = n;
-    if (n === prev) o.selected = true;
-    ns.appendChild(o);
-  });
-  ns.disabled = false;
-
-  const cf     = document.getElementById("nameFilter");
-  const cfPrev = cf.value;
-  cf.innerHTML = '<option value="ALL">All Participants</option>';
-  names.forEach(n => {
-    const o = document.createElement("option");
-    o.value = o.textContent = n;
-    if (n === cfPrev) o.selected = true;
-    cf.appendChild(o);
-  });
+function renderTodayStrip() {
+  const row  = document.getElementById("today-chip-row");
+  const name = document.getElementById("nameSelect").value;
+  if (!name) {
+    row.innerHTML = '<span class="today-empty">Select your name to see today\'s log.</span>';
+    return;
+  }
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const mine = allLogs.filter(r => r["Participant Name"] === name && normDate(r["Date"]) === todayIso);
+  if (mine.length === 0) {
+    row.innerHTML = '<span class="today-empty">No entries logged yet today.</span>';
+    return;
+  }
+  row.innerHTML = mine.map(r => {
+    const cls = r["Status"] === "Completed" ? "chip-done" : "chip-pending";
+    const icon = r["Status"] === "Completed" ? "✓" : "○";
+    return `<span class="today-chip ${cls}">${icon} ${escHtml(r["Topic"])} — ${escHtml(r["Status"])}</span>`;
+  }).join("");
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   DRAW CHARTS
+   DASHBOARD
    ═══════════════════════════════════════════════════════════════════ */
-function drawCharts() {
-  const filterName = document.getElementById("nameFilter").value;
-  const filtered   = filterName === "ALL" ? allRows : allRows.filter(r => r.name === filterName);
+function renderDashboard() {
+  renderCompletionRate();
+  renderLeaderboard();
+  renderTopicDonut();
+  const now = new Date();
+  document.getElementById("dash-updated").textContent = "updated " + now.toLocaleTimeString();
+}
 
-  const total = filtered.length;
-  const done  = filtered.filter(r => r.updation === "Completed").length;
-  const pct   = total ? Math.round(done / total * 100) : 0;
-  document.getElementById("stat-total").textContent = total;
-  document.getElementById("stat-done").textContent  = done;
-  document.getElementById("stat-pct").textContent   = pct + "%";
+/* 1) Daily completion rate: % of participants who logged ANY status today */
+function renderCompletionRate() {
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayNames = new Set(
+    allLogs.filter(r => normDate(r["Date"]) === todayIso).map(r => r["Participant Name"])
+  );
+  const totalParticipants = participants.length || new Set(allLogs.map(r => r["Participant Name"])).size;
+  const updatedCount = [...todayNames].filter(n => participants.length === 0 || participants.includes(n)).length;
+  const pct = totalParticipants ? Math.round((updatedCount / totalParticipants) * 100) : 0;
 
-  const dayMap = {};
-  allRows.forEach(r => {
-    const d = normDate(r.date);
-    if (!dayMap[d]) dayMap[d] = { total: 0, done: 0 };
-    dayMap[d].total++;
-    if (r.updation === "Completed") dayMap[d].done++;
-  });
-  const days    = Object.keys(dayMap).sort();
-  const dones   = days.map(d => dayMap[d].done);
-  const pending = days.map((d, i) => dayMap[d].total - dones[i]);
+  document.getElementById("completion-pct").textContent = pct + "%";
+  document.getElementById("completion-bar").style.width = pct + "%";
+  document.getElementById("completion-count").textContent = `${updatedCount} / ${totalParticipants} updated`;
+  document.getElementById("completion-date").textContent = new Date().toLocaleDateString();
+  document.getElementById("completion-sub").textContent =
+    pct >= 80 ? "🔥 the team is crushing it today!" :
+    pct >= 40 ? "of the team updated today" :
+    "let's get more check-ins today";
+}
 
-  const barCtx = document.getElementById("barChart").getContext("2d");
-  if (barChart) barChart.destroy();
-  barChart = new Chart(barCtx, {
-    type: "bar",
-    data: {
-      labels: days,
-      datasets: [
-        { label: "Completed",   data: dones,   backgroundColor: "rgba(0,229,160,0.75)", borderColor: "rgba(0,229,160,0.9)",   borderWidth: 1, borderRadius: 5, borderSkipped: false },
-        { label: "Not Started", data: pending, backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.12)", borderWidth: 1, borderRadius: 5, borderSkipped: false }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: "bottom", labels: { boxWidth: 10, padding: 14 } },
-        tooltip: { mode: "index", backgroundColor: "rgba(13,20,36,0.95)", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1 }
-      },
-      scales: {
-        x: { stacked: true, grid: { color: "rgba(255,255,255,0.04)" } },
-        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "rgba(255,255,255,0.04)" } }
-      }
+/* 2) Streak leaderboard: longest consecutive-day "Completed" streaks */
+function computeStreaks() {
+  const byParticipant = {};
+  allLogs.forEach(r => {
+    if (r["Status"] === "Completed") {
+      const d = normDate(r["Date"]);
+      if (!d) return;
+      const name = r["Participant Name"];
+      if (!byParticipant[name]) byParticipant[name] = new Set();
+      byParticipant[name].add(d);
     }
   });
 
-  const lineSection = document.getElementById("lineSection");
-  if (filterName !== "ALL") {
-    lineSection.style.display = "block";
-    let cumulative = 0;
-    const lineData = days.map(d => {
-      const match = filtered.find(r => normDate(r.date) === d && r.updation === "Completed");
-      if (match) cumulative++;
-      return cumulative;
-    });
-    const lineCtx = document.getElementById("lineChart").getContext("2d");
-    if (lineChart) lineChart.destroy();
-    lineChart = new Chart(lineCtx, {
-      type: "line",
-      data: {
-        labels: days,
-        datasets: [{
-          label: filterName, data: lineData,
-          borderColor: "#00D4FF", backgroundColor: "rgba(0,212,255,0.08)",
-          tension: 0.45, fill: true, pointRadius: 4,
-          pointBackgroundColor: "#00D4FF", pointBorderColor: "rgba(0,212,255,0.4)", pointBorderWidth: 3,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { backgroundColor: "rgba(13,20,36,0.95)", borderColor: "rgba(0,212,255,0.3)", borderWidth: 1 }
-        },
-        scales: {
-          x: { grid: { color: "rgba(255,255,255,0.04)" } },
-          y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "rgba(255,255,255,0.04)" } }
-        }
+  const results = [];
+  Object.entries(byParticipant).forEach(([name, dateSet]) => {
+    const dates = [...dateSet].sort().reverse(); // most recent first, ISO strings sort lexically
+    let streak = 1;
+    let cursor = new Date(dates[0] + "T00:00:00");
+    for (let i = 1; i < dates.length; i++) {
+      cursor.setDate(cursor.getDate() - 1);
+      const expected = cursor.toISOString().slice(0, 10);
+      if (dates[i] === expected) {
+        streak++;
+      } else {
+        break;
       }
-    });
-  } else {
-    lineSection.style.display = "none";
-    if (lineChart) { lineChart.destroy(); lineChart = null; }
-  }
+    }
+    results.push({ name, streak, lastDate: dates[0] });
+  });
 
-  setChartUpdated();
+  results.sort((a, b) => b.streak - a.streak || a.name.localeCompare(b.name));
+  return results;
+}
+
+function renderLeaderboard() {
+  const list = document.getElementById("leader-list");
+  const streaks = computeStreaks().slice(0, 5);
+  if (streaks.length === 0) {
+    list.innerHTML = '<div class="leader-empty">No streaks yet — be the first!</div>';
+    return;
+  }
+  list.innerHTML = streaks.map((s, i) => {
+    const rank = i + 1;
+    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
+    return `
+      <div class="leader-row rank-${rank}">
+        <div class="leader-rank">${medal}</div>
+        <div class="leader-name">${escHtml(s.name)}</div>
+        <div class="leader-streak">🔥 ${s.streak}d</div>
+      </div>`;
+  }).join("");
+}
+
+/* 3) Topic progress donut: latest status per (participant, topic) pair */
+function renderTopicDonut() {
+  const latest = {}; // key: name|topic -> { status, ts }
+  allLogs.forEach(r => {
+    const key = r["Participant Name"] + "|" + r["Topic"];
+    const ts = parseTimestamp(r["Timestamp"]) || 0;
+    if (!latest[key] || ts >= latest[key].ts) {
+      latest[key] = { status: r["Status"], ts };
+    }
+  });
+  const values = Object.values(latest);
+  const done = values.filter(v => v.status === "Completed").length;
+  const notStarted = values.length - done;
+  const pct = values.length ? Math.round((done / values.length) * 100) : 0;
+
+  document.getElementById("donut-pct").textContent = pct + "%";
+
+  const ctx = document.getElementById("donutChart").getContext("2d");
+  if (donutChart) donutChart.destroy();
+  donutChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: ["Completed", "Not Started"],
+      datasets: [{
+        data: [done, notStarted || (done === 0 ? 1 : 0)],
+        backgroundColor: ["#00E5A0", "rgba(255,255,255,0.12)"],
+        borderColor: ["rgba(0,229,160,0.9)", "rgba(255,255,255,0.18)"],
+        borderWidth: 1.5,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: "72%",
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: "rgba(13,20,36,0.95)", borderColor: "rgba(255,255,255,0.1)", borderWidth: 1 }
+      }
+    }
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    UTILITIES
    ═══════════════════════════════════════════════════════════════════ */
+
+/* Accepts DD/MM/YYYY text, an ISO timestamp string, or a Date — returns YYYY-MM-DD or null */
 function normDate(raw) {
-  if (!raw) return "Unknown";
+  if (!raw) return null;
+  if (typeof raw === "string") {
+    const slash = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (slash) return slash[3] + "-" + slash[2].padStart(2, "0") + "-" + slash[1].padStart(2, "0");
+  }
   const d = new Date(raw);
-  return isNaN(d) ? String(raw) : d.toISOString().slice(0, 10);
+  return isNaN(d) ? null : d.toISOString().slice(0, 10);
+}
+
+/* Accepts "dd/mm/yyyy HH:MM:SS" or ISO — returns a millis number for comparison */
+function parseTimestamp(raw) {
+  if (!raw) return 0;
+  if (typeof raw === "string") {
+    const m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2}):(\d{2})/);
+    if (m) {
+      return new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]}`).getTime();
+    }
+  }
+  const d = new Date(raw);
+  return isNaN(d) ? 0 : d.getTime();
 }
 
 function escHtml(s) {
@@ -890,11 +824,6 @@ function escHtml(s) {
 
 function showOverlay(on) {
   document.getElementById("loading-overlay").style.display = on ? "flex" : "none";
-}
-
-function setLoadingMsg(msg) {
-  document.getElementById("loading-msg").textContent = msg;
-  showOverlay(true);
 }
 
 function showToast(id, msg, type) {
@@ -907,18 +836,9 @@ function showToast(id, msg, type) {
 }
 
 function showGlobalError(msg) {
-  document.getElementById("form-area").innerHTML =
-    `<div class="toast error show" style="display:block">${escHtml(msg)}</div>`;
-  document.getElementById("nameSelect").innerHTML =
-    `<option value="">⚠ Load failed</option>`;
-}
-
-function clearForm() {
-  document.getElementById("nameSelect").value = "";
-  document.getElementById("nameSelect").disabled = true;
-  document.getElementById("form-area").innerHTML =
-    `<p style="color:var(--text-3);font-size:0.85rem;font-family:var(--mono)">Select your name above to load your record.</p>`;
-  document.getElementById("form-updated").textContent = "";
+  showToast("save-toast", "⚠ " + msg, "error");
+  const el = document.getElementById("save-toast");
+  if (el) { el.style.whiteSpace = "pre-line"; }
 }
 
 function setSyncLabel() {
@@ -931,14 +851,7 @@ function setSyncLabel() {
 
 function setFormUpdated() {
   const now = new Date();
-  document.getElementById("form-updated").textContent =
-    "updated " + now.toLocaleTimeString();
-}
-
-function setChartUpdated() {
-  const now = new Date();
-  document.getElementById("chart-updated").textContent =
-    "updated " + now.toLocaleTimeString();
+  document.getElementById("form-updated").textContent = "updated " + now.toLocaleTimeString();
 }
 </script>
 </body>
