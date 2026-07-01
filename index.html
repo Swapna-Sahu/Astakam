@@ -219,14 +219,63 @@ select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
 .chip-pending { background: rgba(255,184,0,0.12);  color: var(--warn);   border: 1px solid rgba(255,184,0,0.3); }
 .today-empty  { color: var(--text-3); font-size: 0.82rem; font-family: var(--mono); }
 
-/* ── Stats dashboard ── */
-.stats-header { display: flex; align-items: baseline; gap: 10px; margin: 44px 0 20px; }
+/* ══ Stats & Achievements header + filter bar ══ */
+.stats-header {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+  margin: 44px 0 0;
+}
 .stats-header h2 {
   font-size: 1.1rem; font-weight: 800; letter-spacing: -0.2px;
   background: linear-gradient(90deg, #fff 0%, var(--gold) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
-.stats-header span { font-size: 0.72rem; color: var(--text-3); font-family: var(--mono); }
+.stats-header-right {
+  margin-left: auto; font-size: 0.72rem; color: var(--text-3); font-family: var(--mono);
+}
+
+/* ── Stats Filter Bar ── */
+.stats-filter-bar {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+  margin: 14px 0 22px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+}
+@media (max-width: 920px) { .stats-filter-bar { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 520px) { .stats-filter-bar { grid-template-columns: 1fr; } }
+
+.filter-bar-title {
+  grid-column: 1 / -1;
+  font-size: 0.68rem; font-family: var(--mono); font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-3);
+  margin-bottom: 2px;
+  display: flex; align-items: center; gap: 7px;
+}
+.filter-bar-title::before {
+  content: ''; display: inline-block;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold); box-shadow: 0 0 6px var(--gold);
+}
+.filter-active-badge {
+  margin-left: 6px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(255,209,102,0.15); color: var(--gold);
+  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.4px;
+  border: 1px solid rgba(255,209,102,0.3);
+}
+
+.btn-sm {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 16px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06); color: var(--text-2);
+  font-size: 0.78rem; font-family: var(--mono); font-weight: 600;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.btn-sm:hover { border-color: rgba(0,212,255,0.4); color: var(--accent); background: rgba(0,212,255,0.08); }
+.btn-sm.active { border-color: rgba(0,212,255,0.5); color: var(--accent); background: rgba(0,212,255,0.12); }
 
 .stats-grid { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 24px; }
 @media (max-width: 920px) { .stats-grid { grid-template-columns: 1fr; } }
@@ -245,6 +294,14 @@ select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
 .progress-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--primary), var(--gold)); width: 0%; transition: width 0.7s cubic-bezier(.22,1,.36,1); box-shadow: 0 0 14px rgba(255,209,102,0.4); }
 .progress-caption { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.7rem; color: var(--text-3); font-family: var(--mono); }
 
+/* Filter context label inside stat card */
+.filter-context-label {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 10px; padding: 4px 10px; border-radius: 8px;
+  background: rgba(255,209,102,0.08); border: 1px solid rgba(255,209,102,0.2);
+  color: var(--gold); font-size: 0.68rem; font-family: var(--mono);
+}
+
 /* Leaderboard */
 .leader-list { display: flex; flex-direction: column; gap: 10px; }
 .leader-row { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid transparent; transition: border-color 0.2s; }
@@ -254,7 +311,7 @@ select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
 .leader-row.rank-2 .leader-rank { color: #C9D4E8; }
 .leader-row.rank-3 .leader-rank { color: #E0A05A; }
 .leader-name { flex: 1; font-size: 0.86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.leader-streak { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--warn); flex-shrink: 0; }
+.leader-count { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; color: var(--warn); flex-shrink: 0; }
 .leader-empty { color: var(--text-3); font-size: 0.85rem; font-family: var(--mono); }
 
 /* Donut */
@@ -372,28 +429,69 @@ select:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
   <!-- ═══ STATS & ACHIEVEMENTS DASHBOARD ═══ -->
   <div class="stats-header">
     <h2>🏆 Stats &amp; Achievements</h2>
-    <span id="dash-updated"></span>
+    <div class="stats-header-right" id="dash-updated"></div>
+  </div>
+
+  <!-- ── Filter bar for the whole stats section ── -->
+  <div class="stats-filter-bar" role="region" aria-label="Stats filters">
+    <div class="filter-bar-title">
+      Filter Stats &amp; Leaderboard
+      <span class="filter-active-badge" id="filter-active-badge" style="display:none">ACTIVE</span>
+    </div>
+
+    <!-- Engagement by Date -->
+    <div>
+      <label for="flt-date">Engagement by Date</label>
+      <input type="date" id="flt-date" placeholder="All dates"/>
+    </div>
+
+    <!-- By Participant -->
+    <div>
+      <label for="flt-participant">By Participant</label>
+      <select id="flt-participant">
+        <option value="">All participants</option>
+      </select>
+    </div>
+
+    <!-- By Topic -->
+    <div>
+      <label for="flt-topic">By Topic</label>
+      <select id="flt-topic">
+        <option value="">All topics</option>
+      </select>
+    </div>
+
+    <!-- Active filter summary / clear -->
+    <div style="display:flex; flex-direction:column; justify-content:flex-end; gap:6px;">
+      <div id="flt-summary" style="font-size:0.68rem;font-family:var(--mono);color:var(--text-3);min-height:1em;"></div>
+      <button class="btn-sm" id="flt-clear-btn" onclick="clearFilters()" style="display:none;">✕ Clear filters</button>
+    </div>
+
+    <div style="display:flex; align-items:flex-end;">
+      <button class="btn btn-primary" onclick="applyFilters()" style="padding:10px 20px;font-size:0.85rem;">Apply</button>
+    </div>
   </div>
 
   <div class="stats-grid">
 
-    <!-- Daily completion rate -->
-    <div class="card card-stat" role="region" aria-label="Daily completion rate">
-      <div class="card-title"><span class="dot"></span>Today's Engagement</div>
+    <!-- Today's Engagement / Filtered Engagement -->
+    <div class="card card-stat" role="region" aria-label="Engagement rate">
+      <div class="card-title"><span class="dot"></span><span id="engagement-card-title">Today's Engagement</span></div>
       <div class="completion-big" id="completion-pct">–%</div>
       <div class="completion-sub" id="completion-sub">of the team updated today</div>
       <div class="progress-track"><div class="progress-fill" id="completion-bar"></div></div>
       <div class="progress-caption">
-        <span id="completion-count">0 / 0 updated</span>
+        <span id="completion-count">0 / 0 completions</span>
         <span id="completion-date"></span>
       </div>
+      <div id="filter-context-label" class="filter-context-label" style="display:none;"></div>
     </div>
 
-    <!-- Streak leaderboard -->
+    <!-- Streak Leaderboard -->
     <div class="card card-leader" role="region" aria-label="Streak leaderboard">
-      <div class="card-title"><span class="dot"></span>Streak Leaderboard</div>
+      <div class="card-title"><span class="dot"></span>Streak Leaderboard <span id="leaderboard-context" style="font-size:0.65rem;color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;margin-left:4px;"></span></div>
       <div class="leader-list" id="leader-list">
-        <div class="leader-empty">No streaks yet — be the first!</div>
+        <div class="leader-empty">No data yet — be the first!</div>
       </div>
     </div>
 
@@ -466,10 +564,66 @@ Chart.defaults.font.size   = 11;
    STATE
    ═══════════════════════════════════════════════════════════════════ */
 let allLogs        = [];   // raw rows from Daily_Logs
-let participants    = [];
-let topics           = [];
-let donutChart       = null;
+let participants   = [];
+let topics         = [];
+let donutChart     = null;
 let autoRefreshTimer = null;
+
+// Active filter state (set by applyFilters / clearFilters)
+let fltDate        = "";   // YYYY-MM-DD or ""
+let fltParticipant = "";   // name string or ""
+let fltTopic       = "";   // topic string or ""
+
+/* ═══════════════════════════════════════════════════════════════════
+   DEDUPLICATION HELPER
+   Rule: one completion per (participant, topic, date). If more than
+   one log entry exists for the same combination on the same day,
+   count it as Completed only if at least one entry is Completed.
+   ═══════════════════════════════════════════════════════════════════ */
+function deduplicateLogs(logs) {
+  // key = participant|topic|date → keep "Completed" wins over "Not Started"
+  const best = {};
+  logs.forEach(r => {
+    const d = normDate(r["Date"]);
+    if (!d) return;
+    const key = r["Participant Name"] + "|" + r["Topic"] + "|" + d;
+    if (!best[key]) {
+      best[key] = Object.assign({}, r, { _dateIso: d });
+    } else if (r["Status"] === "Completed") {
+      // Completed wins
+      best[key] = Object.assign({}, r, { _dateIso: d });
+    }
+  });
+  return Object.values(best);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FILTER HELPERS — build the filtered log view used by all 3 widgets
+   ═══════════════════════════════════════════════════════════════════ */
+
+// Returns deduplicated logs filtered by current flt* state.
+// dateOverride lets renderCompletionRate pass today's date when no
+// date filter is chosen (Today's Engagement default behaviour).
+function filteredLogs(dateOverride) {
+  const deduped = deduplicateLogs(allLogs);
+  return deduped.filter(r => {
+    const d = r._dateIso;
+    if (fltDate   && d !== fltDate)                   return false;
+    if (!fltDate && dateOverride && d !== dateOverride) return false;
+    if (fltParticipant && r["Participant Name"] !== fltParticipant) return false;
+    if (fltTopic       && r["Topic"]            !== fltTopic)       return false;
+    return true;
+  });
+}
+
+// Universe for engagement % denominator:
+// total unique (participant × topic) slots in the current filter scope.
+// When no participant filter: all participants. When no topic filter: all topics.
+function universeSize() {
+  const pList = fltParticipant ? [fltParticipant] : participants;
+  const tList = fltTopic       ? [fltTopic]       : topics;
+  return pList.length * tList.length;
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    JSONP helper
@@ -517,13 +671,19 @@ window.addEventListener("DOMContentLoaded", () => {
 
   loadAll(() => clearTimeout(startupTimeout));
   autoRefreshTimer = setInterval(() => loadAll(null, true), AUTO_REFRESH_MS);
+
+  // Wire up filter inputs: pressing Enter in date/select applies immediately
+  ["flt-date","flt-participant","flt-topic"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("change", updateFilterSummary);
+  });
 });
 
 function setTodayDate() {
   const input = document.getElementById("dateInput");
   const today = new Date();
-  input.value = today.toISOString().slice(0, 10); // yyyy-mm-dd for the native picker
-  input.max   = today.toISOString().slice(0, 10); // can't log future days
+  input.value = today.toISOString().slice(0, 10);
+  input.max   = today.toISOString().slice(0, 10);
   updateDateDisplay();
   input.addEventListener("change", updateDateDisplay);
 }
@@ -571,9 +731,10 @@ function manualRefresh() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   DROPDOWNS
+   DROPDOWNS (entry form + filter bar)
    ═══════════════════════════════════════════════════════════════════ */
 function populateDropdowns() {
+  // ── Entry form ──
   const ns = document.getElementById("nameSelect");
   const prevName = ns.value;
   ns.innerHTML = '<option value="">— select your name —</option>';
@@ -599,6 +760,63 @@ function populateDropdowns() {
 
   if (participants.length === 0) ns.innerHTML = '<option value="">⚠ Add names to Participants_List</option>';
   if (topics.length === 0) ts.innerHTML = '<option value="">⚠ Add topics to Topics_List</option>';
+
+  // ── Filter bar participant dropdown ──
+  const fp = document.getElementById("flt-participant");
+  const prevFP = fp.value;
+  fp.innerHTML = '<option value="">All participants</option>';
+  participants.forEach(n => {
+    const o = document.createElement("option");
+    o.value = o.textContent = n;
+    if (n === prevFP) o.selected = true;
+    fp.appendChild(o);
+  });
+
+  // ── Filter bar topic dropdown ──
+  const ft = document.getElementById("flt-topic");
+  const prevFT = ft.value;
+  ft.innerHTML = '<option value="">All topics</option>';
+  topics.forEach(t => {
+    const o = document.createElement("option");
+    o.value = o.textContent = t;
+    if (t === prevFT) o.selected = true;
+    ft.appendChild(o);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FILTER BAR — apply / clear
+   ═══════════════════════════════════════════════════════════════════ */
+function applyFilters() {
+  fltDate        = document.getElementById("flt-date").value        || "";
+  fltParticipant = document.getElementById("flt-participant").value  || "";
+  fltTopic       = document.getElementById("flt-topic").value        || "";
+  renderDashboard();
+  updateFilterSummary();
+}
+
+function clearFilters() {
+  fltDate = fltParticipant = fltTopic = "";
+  document.getElementById("flt-date").value = "";
+  document.getElementById("flt-participant").value = "";
+  document.getElementById("flt-topic").value = "";
+  renderDashboard();
+  updateFilterSummary();
+}
+
+function updateFilterSummary() {
+  const parts = [];
+  const d  = document.getElementById("flt-date").value;
+  const p  = document.getElementById("flt-participant").value;
+  const t  = document.getElementById("flt-topic").value;
+  if (d) parts.push("Date: " + toDDMMYYYY(d));
+  if (p) parts.push("Participant: " + p);
+  if (t) parts.push("Topic: " + t);
+
+  const hasFilter = parts.length > 0;
+  document.getElementById("flt-clear-btn").style.display = hasFilter ? "inline-flex" : "none";
+  document.getElementById("flt-summary").textContent = hasFilter ? parts.join("  ·  ") : "";
+  document.getElementById("filter-active-badge").style.display = hasFilter ? "inline-flex" : "none";
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -606,10 +824,10 @@ function populateDropdowns() {
    ═══════════════════════════════════════════════════════════════════ */
 function handleSubmit(evt) {
   evt.preventDefault();
-  const name   = document.getElementById("nameSelect").value;
-  const topic  = document.getElementById("topicSelect").value;
+  const name    = document.getElementById("nameSelect").value;
+  const topic   = document.getElementById("topicSelect").value;
   const dateIso = document.getElementById("dateInput").value;
-  const status = document.getElementById("statusSelect").value;
+  const status  = document.getElementById("statusSelect").value;
 
   if (!name || !topic || !dateIso || !status) {
     showToast("save-toast", "✗ Please fill in every field.", "error");
@@ -628,7 +846,7 @@ function handleSubmit(evt) {
       if (data.status === "ok") {
         showToast("save-toast", "✓ Saved successfully!", "success");
         setFormUpdated();
-        loadAll(null, true); // pull the fresh row + recompute stats/leaderboard
+        loadAll(null, true);
       } else {
         showToast("save-toast", "✗ " + (data.message || "Save failed."), "error");
       }
@@ -643,7 +861,7 @@ function handleSubmit(evt) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   TODAY STRIP (per-participant)
+   TODAY STRIP (per-participant, personal log)
    ═══════════════════════════════════════════════════════════════════ */
 function renderTodayStrip() {
   const row  = document.getElementById("today-chip-row");
@@ -653,116 +871,214 @@ function renderTodayStrip() {
     return;
   }
   const todayIso = new Date().toISOString().slice(0, 10);
-  const mine = allLogs.filter(r => r["Participant Name"] === name && normDate(r["Date"]) === todayIso);
-  if (mine.length === 0) {
-    row.innerHTML = '<span class="today-empty">No entries logged yet today.</span>';
-    return;
-  }
-  row.innerHTML = mine.map(r => {
-    const cls = r["Status"] === "Completed" ? "chip-done" : "chip-pending";
-    const icon = r["Status"] === "Completed" ? "✓" : "○";
-    return `<span class="today-chip ${cls}">${icon} ${escHtml(r["Topic"])} — ${escHtml(r["Status"])}</span>`;
-  }).join("");
+
+  // Show one chip per topic: either the latest logged status, or "Not Started"
+  // This satisfies the requirement: "by default at the start of the day all
+  // participants for today should default start with a value as 'not started'"
+  const chips = topics.map(topicName => {
+    // Find all logs for this participant+topic today, pick the best
+    const mine = allLogs.filter(r =>
+      r["Participant Name"] === name &&
+      r["Topic"] === topicName &&
+      normDate(r["Date"]) === todayIso
+    );
+    const completed = mine.some(r => r["Status"] === "Completed");
+    const status = mine.length === 0 ? "Not Started" : completed ? "Completed" : "Not Started";
+    const cls  = status === "Completed" ? "chip-done" : "chip-pending";
+    const icon = status === "Completed" ? "✓" : "○";
+    return `<span class="today-chip ${cls}">${icon} ${escHtml(topicName)} — ${status}</span>`;
+  });
+
+  row.innerHTML = chips.length > 0
+    ? chips.join("")
+    : '<span class="today-empty">No topics found.</span>';
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   DASHBOARD
+   DASHBOARD — orchestrates all 3 widgets
    ═══════════════════════════════════════════════════════════════════ */
 function renderDashboard() {
-  renderCompletionRate();
+  renderEngagement();
   renderLeaderboard();
   renderTopicDonut();
   const now = new Date();
   document.getElementById("dash-updated").textContent = "updated " + now.toLocaleTimeString();
 }
 
-/* 1) Daily completion rate: % of participants who logged ANY status today */
-function renderCompletionRate() {
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const todayNames = new Set(
-    allLogs.filter(r => normDate(r["Date"]) === todayIso).map(r => r["Participant Name"])
-  );
-  const totalParticipants = participants.length || new Set(allLogs.map(r => r["Participant Name"])).size;
-  const updatedCount = [...todayNames].filter(n => participants.length === 0 || participants.includes(n)).length;
-  const pct = totalParticipants ? Math.round((updatedCount / totalParticipants) * 100) : 0;
+/* ═══════════════════════════════════════════════════════════════════
+   1) ENGAGEMENT CARD
+   ════════════════════════════════════════════════════════════════════
+   Logic:
+   • No filters active → show Today's Engagement:
+       denominator = all participants × all topics
+       numerator   = unique (participant, topic) pairs where status=Completed today
+   • Date filter only → show Engagement for that specific date
+       same denominator, but for that date
+   • Participant filter → denominator = 1 participant × all (or filtered) topics
+   • Topic filter → denominator = all (or filtered) participants × 1 topic
+   • Any combination → denominator = filtered scope; numerator = Completed in scope
+   ═══════════════════════════════════════════════════════════════════ */
+function renderEngagement() {
+  const hasFilter = !!(fltDate || fltParticipant || fltTopic);
+  const todayIso  = new Date().toISOString().slice(0, 10);
 
-  document.getElementById("completion-pct").textContent = pct + "%";
-  document.getElementById("completion-bar").style.width = pct + "%";
-  document.getElementById("completion-count").textContent = `${updatedCount} / ${totalParticipants} updated`;
-  document.getElementById("completion-date").textContent = new Date().toLocaleDateString();
-  document.getElementById("completion-sub").textContent =
-    pct >= 80 ? "🔥 the team is crushing it today!" :
-    pct >= 40 ? "of the team updated today" :
-    "let's get more check-ins today";
-}
+  // For no-filter case: default date is today
+  const logs = hasFilter
+    ? filteredLogs()
+    : filteredLogs(todayIso);
 
-/* 2) Streak leaderboard: longest consecutive-day "Completed" streaks */
-function computeStreaks() {
-  const byParticipant = {};
-  allLogs.forEach(r => {
+  // Completions: unique (participant, topic) combos with Completed status
+  const completedSet = new Set();
+  logs.forEach(r => {
     if (r["Status"] === "Completed") {
-      const d = normDate(r["Date"]);
-      if (!d) return;
-      const name = r["Participant Name"];
-      if (!byParticipant[name]) byParticipant[name] = new Set();
-      byParticipant[name].add(d);
+      completedSet.add(r["Participant Name"] + "|" + r["Topic"]);
     }
   });
+  const completedCount = completedSet.size;
 
-  const results = [];
-  Object.entries(byParticipant).forEach(([name, dateSet]) => {
-    const dates = [...dateSet].sort().reverse(); // most recent first, ISO strings sort lexically
-    let streak = 1;
-    let cursor = new Date(dates[0] + "T00:00:00");
-    for (let i = 1; i < dates.length; i++) {
-      cursor.setDate(cursor.getDate() - 1);
-      const expected = cursor.toISOString().slice(0, 10);
-      if (dates[i] === expected) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    results.push({ name, streak, lastDate: dates[0] });
-  });
+  // Denominator = full universe of participant×topic slots in filter scope
+  const pList = fltParticipant ? [fltParticipant] : participants;
+  const tList = fltTopic       ? [fltTopic]       : topics;
+  const total = pList.length * tList.length;
 
-  results.sort((a, b) => b.streak - a.streak || a.name.localeCompare(b.name));
-  return results;
+  // Percentage
+  const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+
+  // Titles and context label
+  let cardTitle    = "Today's Engagement";
+  let subText      = "of the team completed today";
+  let contextLabel = "";
+  let dateLabel    = new Date().toLocaleDateString();
+
+  if (hasFilter) {
+    cardTitle = "Filtered Engagement";
+    const parts = [];
+    if (fltDate) { parts.push(toDDMMYYYY(fltDate)); dateLabel = new Date(fltDate + "T00:00:00").toLocaleDateString(); }
+    if (fltParticipant) parts.push(fltParticipant);
+    if (fltTopic) parts.push(fltTopic);
+    contextLabel = "Filter: " + parts.join(" · ");
+    subText = pct >= 80 ? "🔥 excellent completion in this view!" :
+              pct >= 40 ? "completion rate for selected scope" :
+              "completion rate for selected scope";
+  } else {
+    subText = pct >= 80 ? "🔥 the team is crushing it today!" :
+              pct >= 40 ? "of the team completed today" :
+              "let's get more check-ins today";
+  }
+
+  document.getElementById("engagement-card-title").textContent = cardTitle;
+  document.getElementById("completion-pct").textContent  = pct + "%";
+  document.getElementById("completion-bar").style.width  = pct + "%";
+  document.getElementById("completion-count").textContent = `${completedCount} / ${total} completions`;
+  document.getElementById("completion-date").textContent  = dateLabel;
+  document.getElementById("completion-sub").textContent   = subText;
+
+  const ctxEl = document.getElementById("filter-context-label");
+  if (contextLabel) {
+    ctxEl.textContent   = "🔍 " + contextLabel;
+    ctxEl.style.display = "inline-flex";
+  } else {
+    ctxEl.style.display = "none";
+  }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   2) STREAK LEADERBOARD
+   ════════════════════════════════════════════════════════════════════
+   Default (no filter): cumulative count of unique (topic, date)
+   Completed combinations per participant, across ALL time.
+   The number shown is total completed-topic-days, not a consecutive
+   streak — as requested in the requirements.
+
+   Date filter: only participants who completed anything on that date
+   are shown, ranked by how many topics they completed that day.
+
+   Participant filter: only that participant shown (their own count).
+
+   Topic filter: ranked by number of days each participant completed
+   that specific topic.
+
+   Combined filters: all applied together.
+   ═══════════════════════════════════════════════════════════════════ */
 function renderLeaderboard() {
+  const hasFilter    = !!(fltDate || fltParticipant || fltTopic);
+  const deduped      = deduplicateLogs(allLogs);
+
+  // Apply all active filters to get candidate rows
+  const filtered = deduped.filter(r => {
+    if (r["Status"] !== "Completed") return false;
+    if (fltDate        && r._dateIso             !== fltDate)        return false;
+    if (fltParticipant && r["Participant Name"]   !== fltParticipant) return false;
+    if (fltTopic       && r["Topic"]              !== fltTopic)       return false;
+    return true;
+  });
+
+  // Count unique completed (topic, date) combinations per participant
+  const countMap = {}; // participant → Set of "topic|date" keys
+  filtered.forEach(r => {
+    const name = r["Participant Name"];
+    if (!countMap[name]) countMap[name] = new Set();
+    countMap[name].add(r["Topic"] + "|" + r._dateIso);
+  });
+
+  // Build sorted array
+  const results = Object.entries(countMap)
+    .map(([name, set]) => ({ name, count: set.size }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  // Context label for the leaderboard card
+  const ctxParts = [];
+  if (fltDate)        ctxParts.push(toDDMMYYYY(fltDate));
+  if (fltParticipant) ctxParts.push(fltParticipant);
+  if (fltTopic)       ctxParts.push(fltTopic);
+  document.getElementById("leaderboard-context").textContent =
+    ctxParts.length ? "· " + ctxParts.join(" · ") : "· all time";
+
   const list = document.getElementById("leader-list");
-  const streaks = computeStreaks().slice(0, 5);
-  if (streaks.length === 0) {
-    list.innerHTML = '<div class="leader-empty">No streaks yet — be the first!</div>';
+  if (results.length === 0) {
+    list.innerHTML = '<div class="leader-empty">No completions match this filter.</div>';
     return;
   }
-  list.innerHTML = streaks.map((s, i) => {
-    const rank = i + 1;
+
+  // Label for the count column
+  const countLabel = fltDate ? "topics today" : fltTopic ? "days completed" : "completions";
+
+  list.innerHTML = results.map((s, i) => {
+    const rank  = i + 1;
     const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : rank;
     return `
       <div class="leader-row rank-${rank}">
         <div class="leader-rank">${medal}</div>
         <div class="leader-name">${escHtml(s.name)}</div>
-        <div class="leader-streak">🔥 ${s.streak}d</div>
+        <div class="leader-count">🔥 ${s.count} ${countLabel}</div>
       </div>`;
   }).join("");
 }
 
-/* 3) Topic progress donut: latest status per (participant, topic) pair */
+/* ═══════════════════════════════════════════════════════════════════
+   3) TOPIC DONUT — latest status per (participant, topic, date) scope
+   ═══════════════════════════════════════════════════════════════════ */
 function renderTopicDonut() {
-  const latest = {}; // key: name|topic -> { status, ts }
-  allLogs.forEach(r => {
-    const key = r["Participant Name"] + "|" + r["Topic"];
-    const ts = parseTimestamp(r["Timestamp"]) || 0;
-    if (!latest[key] || ts >= latest[key].ts) {
-      latest[key] = { status: r["Status"], ts };
+  const hasFilter = !!(fltDate || fltParticipant || fltTopic);
+  const todayIso  = new Date().toISOString().slice(0, 10);
+
+  const logs = hasFilter ? filteredLogs() : filteredLogs(todayIso);
+
+  // Count completed vs not: use the deduplicated logs (already done in filteredLogs)
+  // Universe = pList × tList same as engagement
+  const pList = fltParticipant ? [fltParticipant] : participants;
+  const tList = fltTopic       ? [fltTopic]       : topics;
+  const total = pList.length * tList.length;
+
+  const completedSet = new Set();
+  logs.forEach(r => {
+    if (r["Status"] === "Completed") {
+      completedSet.add(r["Participant Name"] + "|" + r["Topic"]);
     }
   });
-  const values = Object.values(latest);
-  const done = values.filter(v => v.status === "Completed").length;
-  const notStarted = values.length - done;
-  const pct = values.length ? Math.round((done / values.length) * 100) : 0;
+  const done       = completedSet.size;
+  const notStarted = Math.max(0, total - done);
+  const pct        = total > 0 ? Math.round((done / total) * 100) : 0;
 
   document.getElementById("donut-pct").textContent = pct + "%";
 
@@ -775,7 +1091,7 @@ function renderTopicDonut() {
       datasets: [{
         data: [done, notStarted || (done === 0 ? 1 : 0)],
         backgroundColor: ["#00E5A0", "rgba(255,255,255,0.12)"],
-        borderColor: ["rgba(0,229,160,0.9)", "rgba(255,255,255,0.18)"],
+        borderColor:     ["rgba(0,229,160,0.9)", "rgba(255,255,255,0.18)"],
         borderWidth: 1.5,
         hoverOffset: 6
       }]
@@ -794,7 +1110,7 @@ function renderTopicDonut() {
    UTILITIES
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Accepts DD/MM/YYYY text, an ISO timestamp string, or a Date — returns YYYY-MM-DD or null */
+/* Accepts DD/MM/YYYY text, ISO timestamp, or Date → YYYY-MM-DD or null */
 function normDate(raw) {
   if (!raw) return null;
   if (typeof raw === "string") {
@@ -805,14 +1121,12 @@ function normDate(raw) {
   return isNaN(d) ? null : d.toISOString().slice(0, 10);
 }
 
-/* Accepts "dd/mm/yyyy HH:MM:SS" or ISO — returns a millis number for comparison */
+/* Accepts "dd/mm/yyyy HH:MM:SS" or ISO → millis for comparison */
 function parseTimestamp(raw) {
   if (!raw) return 0;
   if (typeof raw === "string") {
     const m = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2}):(\d{2})/);
-    if (m) {
-      return new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]}`).getTime();
-    }
+    if (m) return new Date(`${m[3]}-${m[2]}-${m[1]}T${m[4]}:${m[5]}:${m[6]}`).getTime();
   }
   const d = new Date(raw);
   return isNaN(d) ? 0 : d.getTime();
